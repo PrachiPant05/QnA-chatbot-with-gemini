@@ -7,6 +7,8 @@ from tools import tool
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
+from transformers import T5ForConditionalGeneration, T5Tokenizer
+
 
 # Load environment variables for article writing
 load_dotenv()
@@ -22,6 +24,9 @@ llm = ChatGoogleGenerativeAI(
 # Load the BART model and tokenizer for summarization
 summarization_model = BartForConditionalGeneration.from_pretrained("facebook/bart-large-cnn")
 summarization_tokenizer = BartTokenizer.from_pretrained("facebook/bart-large-cnn")
+paraphrasing_model = T5ForConditionalGeneration.from_pretrained("t5-base")
+paraphrasing_tokenizer = T5Tokenizer.from_pretrained("t5-base")
+
 
 # Download NLTK resources
 nltk.download('punkt')
@@ -120,6 +125,12 @@ def summarize_text(input_text):
     summary_ids = summarization_model.generate(inputs, max_length=150, num_beams=4, early_stopping=True)
     summary = summarization_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
+
+def paraphrase_text(input_text):
+    inputs = paraphrasing_tokenizer.encode("paraphrase: " + input_text, return_tensors="pt", max_length=512, truncation=True)
+    outputs = paraphrasing_model.generate(inputs, max_length=150, num_beams=4, early_stopping=True)
+    paraphrased_text = paraphrasing_tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return paraphrased_text
 
 
 # Initialize the Writer agent for article writing
